@@ -26,7 +26,7 @@ class IdTest < Test::Unit::TestCase
 
   private
   def current_sequence_value
-    sql = "select pub.dummy_seq.currval from pub.dummy_seq"
+    sql = "select pub.dummy_sequence.currval from pub.dummy_sequence"
     res = @connection.select_one(sql)
     res.nil? ? 0 : res['sequence_current'].to_i
   end

@@ -8,7 +8,7 @@ rescue LoadError
 end
 
 
-
+require 'active_record'
 require 'jdbc_adapter'
 
 ['../../jdbc_adapter/jdbc_openedge','connection_adapter'].each do |req_file|
