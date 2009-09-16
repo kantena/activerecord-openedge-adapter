@@ -57,8 +57,7 @@ module ActiveRecord
 
       #TODO Améliorer la gestion des dates
       def type_cast(value)
-      
-        return nil if value.nil?
+        
         case type
         when :timestamp     then value=='NULL' ? value : "'"+value.to_s+"'"
         when :datetime      then value=='NULL' ? value : "'"+value.to_s+"'"
@@ -133,14 +132,14 @@ module ActiveRecord
     end
 
     def common_default(column)
-      return nil if column.default=="NULL"
+     
+      return nil if (column.default=="NULL")
       column.default unless column.name == self.class.primary_key
     end
     
     class << self
 
       #TODO : voir si on peut éviter la duplication avec les :delegates_method
-     
       # Les méthodes find sont réimplémentées pour :
       # 1 - Gérer la récupération des champs extend de Progress
       # 2 - Gérer l'option :offset qui n'existe pas en SQL Progress

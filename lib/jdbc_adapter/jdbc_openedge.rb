@@ -29,9 +29,8 @@ module ::JdbcSpec
         when :integer                   then return value.nil? ?  "NULL" :  value
         end
       end
-      
       return value if value.kind_of?(Numeric)
-      return value.nil? ?  "''" :  "'"+value+"'"
+      return value.nil? ?  "NULL" :  "'"+value+"'"
     end
 
     
