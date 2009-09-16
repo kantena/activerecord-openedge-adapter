@@ -18,6 +18,4 @@ class DatesTest < Test::Unit::TestCase
     assert_equal date, t.date
   end
 
-
-
 end
