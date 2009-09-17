@@ -1,15 +1,38 @@
 module ActiveRecord
   module ConnectionAdapters
+
+  
+
     class JdbcAdapter < AbstractAdapter
 
-      def _execute(sql, name = nil)
+      def _execute(sql,name = nil)
         if JdbcConnection::select?(sql)
           @connection.execute_query(sql)
         else
           @connection.execute_update(sql)
         end
       end
-     
+      
+      def supports_migrations? 
+        true
+      end
+
+      def native_database_types
+        {
+          :primary_key => "BIGINT",
+          :string      => { :name => "VARCHAR", :limit => 255 },
+          :text        => { :name => "CLOB" },
+          :integer     => { :name => "INTEGER" },
+          :float       => { :name => "NUMBER" },
+          :decimal     => { :name => "DECIMAL" },
+          :datetime    => { :name => "DATETIME" },
+          :timestamp   => { :name => "DATETIME-TZ" },
+          :time        => { :name => "DATETIME" },
+          :date        => { :name => "DATE" },
+          :binary      => { :name => "BLOB" },
+          :boolean     =>{ :name => "BIT", :limit => 1 } 
+        }
+      end
     end
 
     class JdbcColumn < Column
@@ -91,6 +114,13 @@ module ActiveRecord
       end
     end
 
+    module SchemaStatements
+
+      def table_exists?(table_name)
+        table = table_name.dup.delete("pub.")
+        tables.include?(table.to_s)
+      end
+    end
     
     module DatabaseStatements
 
@@ -115,6 +145,31 @@ module ActiveRecord
 end
 
 module ActiveRecord
+  class Migrator
+    extend JdbcSpec::ActiveRecordExtensions
+    class << self
+   
+      alias_method :original_get_all_versions, :get_all_versions
+
+      def get_all_versions
+        Base.table_name_prefix = "PUB."
+        res = method(:original_get_all_versions).call
+        Base.table_name_prefix = ""
+        res
+      end
+    end
+
+    alias_method :original_record_version_state_after_migrating, :record_version_state_after_migrating
+
+    def record_version_state_after_migrating(version)
+      Base.table_name_prefix = "PUB."
+      res = method(:original_record_version_state_after_migrating).call(version)
+      Base.table_name_prefix = ""
+      res
+    end
+    
+  end
+
   class Base
     extend JdbcSpec::ActiveRecordExtensions
 
@@ -183,7 +238,7 @@ module ActiveRecord
       def extend_objects(objects)
         return objects if  objects.is_a?(Array) && objects.empty?
         return objects if objects.nil?
-        objs = objects.is_a?(Array) ? objects : [objects] 
+        objs = objects.is_a?(Array) ? objects : [objects]
         objs.each do |obj|
           obj.attributes.each do |attr|
             column =  columns_hash[attr[0]]

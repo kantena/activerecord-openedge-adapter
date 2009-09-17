@@ -68,7 +68,7 @@ module ::JdbcSpec
     end
  
     def default_sequence_name(table, column = nil)
-      "dummy_seq"
+      "dummy_sequence"
     end
 
     def extended_columns(table)
