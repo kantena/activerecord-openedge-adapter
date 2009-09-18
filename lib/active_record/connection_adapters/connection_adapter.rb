@@ -1,7 +1,34 @@
 module ActiveRecord
   module ConnectionAdapters
 
-  
+    class TableDefinition
+
+      alias_method :original_column, :column
+
+      def column(name, type, options = {})
+        method(:original_column).call(name,type,options)
+        column = self[name]
+        column.cs = options[:cs]
+        self
+      end
+    end
+    
+    class ColumnDefinition 
+      attr_accessor :cs
+
+      alias_method :original_to_sql, :to_sql
+
+      def to_sql
+        column_sql = method(:original_to_sql).call
+        column_options = {}
+        column_options[:cs] = false if (cs.nil? && self.type == 'string')
+        column_options[:cs] = cs unless cs.nil?
+        add_column_options!(column_sql, column_options) unless type.to_sym == :primary_key
+        column_sql
+      end
+      
+      alias to_s :to_sql
+    end
 
     class JdbcAdapter < AbstractAdapter
 
@@ -37,6 +64,7 @@ module ActiveRecord
 
     class JdbcColumn < Column
 
+      #TODO remplacer par generation dyna getter setter
       def extended(ext=false)
         @extended = ext
       end
@@ -61,6 +89,14 @@ module ActiveRecord
         @extended_size
       end
 
+      def case_sensitive=(val=false)
+        @case_sensitive = val
+      end
+
+      def case_sensitive
+        @case_sensitive
+      end
+
       def simplified_type(field_type)
         case field_type
         when /^bigint/i             then :integer
@@ -78,7 +114,6 @@ module ActiveRecord
         end
       end
 
-      #TODO Améliorer la gestion des dates
       def type_cast(value)
         
         case type
@@ -120,6 +155,14 @@ module ActiveRecord
         table = table_name.dup.delete("pub.")
         tables.include?(table.to_s)
       end
+
+      alias_method :original_add_column, :add_column
+     
+      def add_column(table_name, column_name, type, options = {})
+        options[:cs]= false if (!options[:cs] && type.to_s == 'string')
+        method(:original_add_column).call(table_name, column_name, type, options)
+      end
+   
     end
     
     module DatabaseStatements
@@ -193,41 +236,22 @@ module ActiveRecord
     end
     
     class << self
-
-      #TODO : voir si on peut éviter la duplication avec les :delegates_method
       # Les méthodes find sont réimplémentées pour :
       # 1 - Gérer la récupération des champs extend de Progress
       # 2 - Gérer l'option :offset qui n'existe pas en SQL Progress
+   
+      
+      #Test si déjà défini car lorsque les tests sont lancés avec rake , deux fois évalué ... donc boucle
+      alias_method :original_find, :find unless ActiveRecord::Base.methods.include?('original_find')
 
       def find(*args)
-        options = args.extract_options!
-        validate_find_options(options)
-        set_readonly_option!(options)
-        extend_objects case args.first
-        when :first then find_initial(options)
-        when :last  then find_last(options)
-        when :all   then find_every(options)
-        else             find_from_ids(args, options)
-        end
-      end
-
-      def find_every(options)
-        include_associations = merge_includes(scope(:find, :include), options[:include])
-        if include_associations.any? && references_eager_loaded_tables?(options)
-          records = find_with_associations(options)
-        else
-          records = find_by_sql(construct_finder_sql(options),options)
-          if include_associations.any?
-            preload_associations(records, include_associations)
-          end
-        end
-        records.each { |record| record.readonly! } if options[:readonly]
-        records
+        @offset_find_opt = args.dup.extract_options![:offset]
+        extend_objects original_find(*args)
       end
     
-      def find_by_sql(sql,options)
+      def find_by_sql(sql)
         records = connection.select_all(sanitize_sql(sql), "#{name} Load")
-        last = options[:offset] ? options[:offset] : 0
+        last =  @offset_find_opt ?  @offset_find_opt : 0
         (1..last).each{records.shift} #can be replaced with drop in ruby 1.9
         records.collect! { |record| instantiate(record) }
       end

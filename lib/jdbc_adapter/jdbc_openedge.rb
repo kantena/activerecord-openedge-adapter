@@ -11,6 +11,14 @@ module ::JdbcSpec
  
   module OpenEdge
 
+    def add_column_options!(sql, options)
+      super
+      if options.include?(:cs)
+        cs = options[:cs]? 'y' : 'n'
+        sql << " pro_case_sensitive '#{cs}'"
+      end
+      
+    end
     DEFAULT_TABLE_PREFIX = 'pub'
 
     def quote(value, column = nil)
@@ -32,7 +40,6 @@ module ::JdbcSpec
       return value if value.kind_of?(Numeric)
       return value.nil? ?  "NULL" :  "'"+value+"'"
     end
-
     
     def self.adapter_matcher(name,*)
       name =~ /openedge/i ? self : false
