@@ -1,4 +1,5 @@
 module ActiveRecord
+  
   module ConnectionAdapters
 
     class TableDefinition
@@ -51,15 +52,44 @@ module ActiveRecord
           :text        => { :name => "CLOB" },
           :integer     => { :name => "INTEGER" },
           :float       => { :name => "NUMBER" },
-          :decimal     => { :name => "DECIMAL" },
-          :datetime    => { :name => "DATETIME" },
-          :timestamp   => { :name => "DATETIME-TZ" },
+          :decimal     => { :name => "NUMERIC" },
+          :datetime    => { :name => "TIMESTAMP" },
+          :timestamp   => { :name => "TIMESTAMP_TIMEZONE" },
           :time        => { :name => "DATETIME" },
           :date        => { :name => "DATE" },
-          :binary      => { :name => "BLOB" },
+          :binary      => { :name => "LVARBINARY", :limit => 104857600 },
           :boolean     =>{ :name => "BIT", :limit => 1 } 
         }
       end
+
+
+      def indexes(table_name, name = nil)
+        indexes_from_sysprogress_sysindexes(table_name).map do |index|
+          IndexDefinition.new(table_name,index[:name],index[:unique],index[:columns])
+        end
+      end
+
+      private
+      def indexes_from_sysprogress_sysindexes(table)
+        indexes=[]
+        sql = "select idxname,colname from sysprogress.sysindexes where tbl='#{table}'"
+        select_all(sql).each do |index|
+          r_idx = indexes.select{|idx| idx[:name] == index['idxname']}
+          if r_idx.empty?
+            indexes << {:name => index['idxname'], :columns => [index['colname']], :unique => unique?(index['idxname'])}
+          else
+            r_idx[0][:columns]<< index['colname']
+          end
+        end
+        indexes
+      end
+
+      def unique? (index_name)
+        sql = 'select "_Unique" from "pub"."_Index" where "_Index-name"='+"'#{index_name}'";
+        res = select_one(sql)
+        res['_unique'].to_i == 1 ? true : false
+      end
+
     end
 
     class JdbcColumn < Column
@@ -93,7 +123,7 @@ module ActiveRecord
         @case_sensitive = val
       end
 
-      def case_sensitive
+      def case_sensitive?
         @case_sensitive
       end
 
@@ -103,14 +133,14 @@ module ActiveRecord
         when /^date/i               then :date
         when /^timestamp_timezone/  then :timestamp
         when /^timestamp/i          then :datetime
-        when /^numeric/i            then :decimal  # à vérifier pas de float en progress?
+        when /^numeric/i            then :decimal  
         when /^bit\(1\)$/i          then :boolean
-        when /blob/i                then :binary
+        when /^lvarbinary/i         then :binary
         when /^varchar/i            then :string
         when /^integer/i            then :integer
-        when /^clob/i               then :text
-        when /^raw/i                then :binary
-        when /^recid/i              then :binary
+        when /^lvarchar/i           then :text
+        when /^varbinary/i          then :binary
+        else                         :binary  #RECID and ROWID
         end
       end
 
@@ -126,7 +156,6 @@ module ActiveRecord
         end
       end
     end
-   
 
     module ProgressExtendFields
       def self.limit(ext_col)
@@ -151,18 +180,23 @@ module ActiveRecord
 
     module SchemaStatements
 
+      alias_method :original_add_column, :add_column
+      alias_method :original_remove_index, :remove_index
+
       def table_exists?(table_name)
         table = table_name.dup.delete("pub.")
         tables.include?(table.to_s)
       end
 
-      alias_method :original_add_column, :add_column
-     
       def add_column(table_name, column_name, type, options = {})
         options[:cs]= false if (!options[:cs] && type.to_s == 'string')
         method(:original_add_column).call(table_name, column_name, type, options)
       end
-   
+      
+      def remove_index(table_name, options = {})
+        table = table_name.include?('.') ? table_name : 'pub.'+table_name
+        method(:original_remove_index).call(table,options)
+      end
     end
     
     module DatabaseStatements
@@ -184,10 +218,13 @@ module ActiveRecord
       end
 
     end
+
   end
+
 end
 
 module ActiveRecord
+  
   class Migrator
     extend JdbcSpec::ActiveRecordExtensions
     class << self
@@ -274,5 +311,6 @@ module ActiveRecord
     end
     
   end
+  
 end
 

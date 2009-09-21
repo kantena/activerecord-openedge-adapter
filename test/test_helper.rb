@@ -20,3 +20,8 @@ def create_pet (name)
   assert pet.save
   pet
 end
+
+
+def column(klass,name)
+  klass.columns.each {|col| return col if col.name == name}
+end

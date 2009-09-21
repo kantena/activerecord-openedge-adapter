@@ -1,4 +1,5 @@
 module ::JdbcSpec
+
   module ActiveRecordExtensions
 
     def openedge_connection(config)
@@ -11,6 +12,7 @@ module ::JdbcSpec
  
   module OpenEdge
 
+    
     def add_column_options!(sql, options)
       super
       if options.include?(:cs)
@@ -86,11 +88,8 @@ module ::JdbcSpec
       end
     end
 
-    def to_progress_columns(columns,table_name)
-      build_columns_from_ext_column(columns,table_name)
-    end
 
-    def build_columns_from_ext_column(columns,table_name)
+    def retrieve_extended_columns(columns,table_name)
       extended_columns(table_name).map do |ext_col|
         columns.each  do|col|
           if ext_col['col'] == col.name
@@ -105,7 +104,7 @@ module ::JdbcSpec
  
     def columns(table_name, name=nil)
       cols = @connection.columns_internal(table_name, name)
-      to_progress_columns(cols,table_name)
+      retrieve_extended_columns(cols,table_name)
     end
 
     private
@@ -124,6 +123,7 @@ module ::JdbcSpec
 
    
   end
+  
 end
 
 
