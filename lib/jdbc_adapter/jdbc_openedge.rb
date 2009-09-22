@@ -117,6 +117,7 @@ module ::JdbcSpec
     end
    
     def double_quotes(string)
+      return "''" if string.nil?
       string.gsub("'","''")
     end
    
