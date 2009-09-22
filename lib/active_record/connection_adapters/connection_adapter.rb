@@ -14,7 +14,8 @@ module ActiveRecord
       end
     end
     
-    class ColumnDefinition 
+    class ColumnDefinition
+      
       attr_accessor :cs
 
       alias_method :original_to_sql, :to_sql

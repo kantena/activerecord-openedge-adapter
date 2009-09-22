@@ -11,7 +11,7 @@ module ::JdbcSpec
   end
  
   module OpenEdge
-
+    DEFAULT_TABLE_PREFIX = 'pub'
     
     def add_column_options!(sql, options)
       super
@@ -19,10 +19,8 @@ module ::JdbcSpec
         cs = options[:cs]? 'y' : 'n'
         sql << " pro_case_sensitive '#{cs}'"
       end
-      
     end
-    DEFAULT_TABLE_PREFIX = 'pub'
-
+   
     def quote(value, column = nil)
 
       if column
@@ -39,10 +37,9 @@ module ::JdbcSpec
         when :integer                   then return value.nil? ?  "NULL" :  value
         end
       end
+      
       return value if value.kind_of?(Numeric)
-      if (value.kind_of?(TrueClass)|| value.kind_of?(FalseClass))
-        return value ? '1' : '0'
-      end
+      return value ? '1' : '0' if (value.kind_of?(TrueClass)|| value.kind_of?(FalseClass))
       return value.nil? ?  "NULL" :  "'"+value+"'"
     end
     
@@ -91,7 +88,6 @@ module ::JdbcSpec
       end
     end
 
-
     def retrieve_extended_columns(columns,table_name)
       extended_columns(table_name).map do |ext_col|
         columns.each  do|col|
@@ -119,12 +115,10 @@ module ::JdbcSpec
       [sql_create_table, sql_insert_row, sql_create_sequence].each {|sql| @connection.execute_update(sql)}
     end
    
-
     def double_quotes(string)
       string.gsub("'","''")
     end
-
-   
+ 
   end
   
 end
