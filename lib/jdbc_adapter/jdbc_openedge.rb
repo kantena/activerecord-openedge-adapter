@@ -9,10 +9,12 @@ module ::JdbcSpec
     end
 
   end
+  
  
   module OpenEdge
+
     DEFAULT_TABLE_PREFIX = 'pub'
-    
+
     def add_column_options!(sql, options)
       super
       if options.include?(:cs)
@@ -20,7 +22,7 @@ module ::JdbcSpec
         sql << " pro_case_sensitive '#{cs}'"
       end
     end
-   
+    
     def quote(value, column = nil)
 
       if column
@@ -37,7 +39,6 @@ module ::JdbcSpec
         when :integer                   then return value.nil? ?  "NULL" :  value
         end
       end
-      
       return value if value.kind_of?(Numeric)
       return value ? '1' : '0' if (value.kind_of?(TrueClass)|| value.kind_of?(FalseClass))
       return value.nil? ?  "NULL" :  "'"+value+"'"
@@ -118,7 +119,7 @@ module ::JdbcSpec
     def double_quotes(string)
       string.gsub("'","''")
     end
- 
+   
   end
   
 end

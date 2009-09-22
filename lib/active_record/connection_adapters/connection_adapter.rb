@@ -14,8 +14,7 @@ module ActiveRecord
       end
     end
     
-    class ColumnDefinition
-      
+    class ColumnDefinition 
       attr_accessor :cs
 
       alias_method :original_to_sql, :to_sql
@@ -62,6 +61,7 @@ module ActiveRecord
           :boolean     =>{ :name => "BIT" } 
         }
       end
+      
 
 
       def indexes(table_name, name = nil)
@@ -77,7 +77,7 @@ module ActiveRecord
         select_all(sql).each do |index|
           r_idx = indexes.select{|idx| idx[:name] == index['idxname']}
           if r_idx.empty?
-            indexes << {:name => index['idxname'], :columns => [index['colname']], :unique => unique?(index['idxname'])}
+            indexes << {:name => index['idxname'], :columns => [index['colname']], :unique => unique?(index['idxname'],table)}
           else
             r_idx[0][:columns]<< index['colname']
           end
@@ -85,8 +85,14 @@ module ActiveRecord
         indexes
       end
 
-      def unique? (index_name)
-        sql = 'select "_Unique" from "pub"."_Index" where "_Index-name"='+"'#{index_name}'";
+      def table_rowid(table)
+        sql = 'select rowid from pub."_File" where "_File-Name" ='+"'#{table}'";
+        select_one(sql);
+      end
+
+      def unique? (index_name,table_name)
+        rowid = table_rowid(table_name)
+        sql = 'select "_Unique" from "pub"."_Index" where "_Index-name"='+"'#{index_name}' and "+'"_File-recid"='+"'"+rowid['rowid'].to_s+"'";
         res = select_one(sql)
         res['_unique'].to_i == 1 ? true : false
       end
