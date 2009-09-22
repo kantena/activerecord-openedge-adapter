@@ -24,9 +24,9 @@ module ::JdbcSpec
     DEFAULT_TABLE_PREFIX = 'pub'
 
     def quote(value, column = nil)
-     
+
       if column
-        if column.extended?
+        if column.respond_to?(:extended) && column.extended?
           val = value.dup
           val.shift
           return "'"+val.join(";")+"'"
@@ -40,6 +40,9 @@ module ::JdbcSpec
         end
       end
       return value if value.kind_of?(Numeric)
+      if (value.kind_of?(TrueClass)|| value.kind_of?(FalseClass))
+        return value ? '1' : '0'
+      end
       return value.nil? ?  "NULL" :  "'"+value+"'"
     end
     

@@ -54,11 +54,11 @@ module ActiveRecord
           :float       => { :name => "NUMBER" },
           :decimal     => { :name => "NUMERIC" },
           :datetime    => { :name => "TIMESTAMP" },
-          :timestamp   => { :name => "TIMESTAMP_TIMEZONE" },
+          :timestamp   => { :name => "TIMESTAMP WITH TIME ZONE" },
           :time        => { :name => "DATETIME" },
           :date        => { :name => "DATE" },
           :binary      => { :name => "LVARBINARY", :limit => 104857600 },
-          :boolean     =>{ :name => "BIT", :limit => 1 } 
+          :boolean     =>{ :name => "BIT" } 
         }
       end
 
