@@ -25,6 +25,7 @@ module ::JdbcSpec
     
     def quote(value, column = nil)
 
+
       if column
         if column.respond_to?(:extended) && column.extended?
           val = value.dup
@@ -36,11 +37,15 @@ module ::JdbcSpec
         when :date,:datetime,:timestamp then return value.nil? ? "NULL" : value
         when :boolean                   then return value ? '1' : '0'
         when :string                    then return "'"+double_quotes(value)+"'"
-        when :integer                   then return value.nil? ?  "NULL" :  value
+        when :integer                   then return value.nil? ?  "NULL" :  "#{value}"
         end
       end
-      return value if value.kind_of?(Numeric)
-      return value ? '1' : '0' if (value.kind_of?(TrueClass)|| value.kind_of?(FalseClass))
+
+      return "#{value}" if value.kind_of?(Numeric)
+
+      if (value.kind_of?(TrueClass)|| value.kind_of?(FalseClass))
+        return value ? '1' : '0'
+      end
       return value.nil? ?  "NULL" :  "'"+value+"'"
     end
     
