@@ -54,8 +54,6 @@ class DatesTest < Test::Unit::TestCase
     assert_equal date, t.date_ff.to_s(:db)
   end
 
- 
-
   def test_assign_and_retrieve_date_with_date_object_2
     date = Date.new(2009,10,23)
     t = Types.new
@@ -64,5 +62,7 @@ class DatesTest < Test::Unit::TestCase
     t.reload
     assert_equal date, t.date_ff
   end
+
+  
 
 end

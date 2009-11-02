@@ -23,7 +23,6 @@ class FindersTest < Test::Unit::TestCase
     assert_equal 5,Person.find(:all,:limit => 5,:offset => 0).size
     assert_equal 3,Person.find(:all,:limit => 3,:offset => 1).size
     assert_equal 1,Person.find(:all,:limit => 1,:offset => 3).size
-    assert_equal 4,Person.find(:all,:limit => 10,:offset => 1).size
   end
 
   def test_on_values_with_find_with_offset

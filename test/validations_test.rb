@@ -8,12 +8,12 @@ class ValidationsTest < Test::Unit::TestCase
     Office.delete_all
   end
 
-  def test_external_id_must_be_present_and_unique
+  def test_external_id_must_be_present
     office = Office.new
     assert_raise ActiveRecord::RecordInvalid do
       office.save!
     end
-    assert_equal 2,office.errors.size
+    assert_equal 1,office.errors.size
   end
 
 end

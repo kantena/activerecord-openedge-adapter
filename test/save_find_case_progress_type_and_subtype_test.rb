@@ -12,7 +12,10 @@ class SaveFindForDifferentProgressTypesTest < Test::Unit::TestCase
   end
  
   def test_with_date
-    test_with(:date,nil,"09-20-09","'2009-09-20'")
+    @t.date = '2009-09-20'
+    assert @t.save
+    @t = Types.find :first
+    assert_equal '2009-09-20', @t.date.to_s(:db)
   end
 
   def test_with_decimal
@@ -24,11 +27,18 @@ class SaveFindForDifferentProgressTypesTest < Test::Unit::TestCase
   end
 
   def test_with_date_time
-    test_with('datetime',nil,'09/20/2009 20:30:20',"'2009-09-20 20:30:20.0'")
+    @t.datetime = '2009-09-20 20:30:20'
+    assert @t.save
+    @t.reload
+    assert_equal '2009-09-20 20:30:20', @t.datetime.to_s(:db)
   end
   
   def test_with_date_time_tz
-    test_with('datetime-tz',nil,'09/20/2009 20:30:20',"'2009-09-20 20:30:20:000 + 02:00'")
+    date_tz = Time.now
+    @t['datetime-tz'] = date_tz
+    assert @t.save
+    @t.reload
+    assert_equal date_tz.to_s, @t['datetime-tz'].to_s
   end
 
   def test_with_float

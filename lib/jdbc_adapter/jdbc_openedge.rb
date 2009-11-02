@@ -12,7 +12,7 @@ module ::JdbcSpec
   
  
   module OpenEdge
-
+ 
     DEFAULT_TABLE_PREFIX = 'pub'
 
     def add_column_options!(sql, options)
@@ -22,31 +22,28 @@ module ::JdbcSpec
         sql << " pro_case_sensitive '#{cs}'"
       end
     end
-    
+
     def quote(value, column = nil)
 
+      return "NULL" if value.nil?
 
-      if column
+      unless column.nil?
         if column.respond_to?(:extended) && column.extended?
           val = value.dup
           val.shift
           return "'"+val.join(";")+"'"
         end
-
+        
         case column.type
-        when :date,:datetime,:timestamp then return value.nil? ? "NULL" : value
-        when :boolean                   then return value ? '1' : '0'
-        when :string                    then return "'"+double_quotes(value)+"'"
-        when :integer                   then return value.nil? ?  "NULL" :  "#{value}"
+        when :date,:datetime,:timestamp,:time then to_openedge_date(column.type,value)
+        when :boolean                         then value ? '1' : '0'
+        when :string ,:text                   then "'"+double_quotes(value)+"'"
+        when :integer ,:float,:decimal        then "#{value}"
+        when :binary                          then "'#{value}'"
         end
+      else
+        quote_value(value)
       end
-
-      return "#{value}" if value.kind_of?(Numeric)
-
-      if (value.kind_of?(TrueClass)|| value.kind_of?(FalseClass))
-        return value ? '1' : '0'
-      end
-      return value.nil? ?  "NULL" :  "'"+value+"'"
     end
     
     def self.adapter_matcher(name,*)
@@ -113,7 +110,15 @@ module ::JdbcSpec
     end
 
     private
-     
+    
+    def to_openedge_date(type,value)
+      case type
+      when :datetime  then "'#{value.strftime('%Y-%m-%d %H:%M:%S')}'"
+      when :date      then "'#{value.strftime('%Y-%m-%d')}'"
+      when :timestamp      then "'#{value.strftime('%Y-%m-%d %H:%M:%S:000 + 02:00')}'"
+      end
+    end
+
     def create_dummy_sequence
       sql_create_table = "create table pub.DUMMY_SEQUENCE (id integer)"
       sql_insert_row = "insert into PUB.DUMMY_SEQUENCE(id) values(1)"
@@ -125,7 +130,15 @@ module ::JdbcSpec
       return "''" if string.nil?
       string.gsub("'","''")
     end
-   
+
+    def quote_value(value)
+      case value
+      when Numeric then "#{value}"
+      when TrueClass,FalseClass then value ? '1' : '0'
+      when DateTime,Time,Date then value.nil? ?  "NULL" :  value
+      else value.nil? ?  "NULL" :  "'"+value+"'"
+      end
+    end
   end
   
 end

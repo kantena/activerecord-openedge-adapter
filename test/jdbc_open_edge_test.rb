@@ -37,4 +37,13 @@ class JdbcOpenEdgeTest <Test::Unit::TestCase
     t.reload
     assert_equal nil, t.integer
   end
+
+  def test_quote_value
+    z = Date.today
+    z = nil
+    assert_equal "2",quote_value(2)
+    assert_equal '0',quote_value(false)
+    assert_equal '1',quote_value(true)
+    assert_equal 'NULL',quote_value(z)
+  end
 end

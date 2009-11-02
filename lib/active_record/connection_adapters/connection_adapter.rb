@@ -35,6 +35,7 @@ module ActiveRecord
 
       def _execute(sql,name = nil)
         if JdbcConnection::select?(sql)
+         
           @connection.execute_query(sql)
         else
           @connection.execute_update(sql)
@@ -101,6 +102,32 @@ module ActiveRecord
 
     class JdbcColumn < Column
 
+     
+      def simplified_type(field_type)
+        case field_type
+        when /^bigint/i             then :integer
+        when /^date/i               then :date
+        when /^timestamp_timezone/  then :timestamp
+        when /^timestamp/i          then :datetime
+        when /^numeric/i            then :decimal  
+        when /^bit\(1\)$/i          then :boolean
+        when /^lvarbinary/i         then :binary
+        when /^varchar/i            then :string
+        when /^integer/i            then :integer
+        when /^lvarchar/i           then :text
+        when /^varbinary/i          then :binary
+        else                         :binary  #RECID and ROWID
+        end
+      end
+
+      def type_cast(value)
+       
+        return nil if value == 'NULL'
+        return 'NULL' if value.nil?
+       
+        super
+      end
+
       #TODO remplacer par generation dyna getter setter
       def extended(ext=false)
         @extended = ext
@@ -121,7 +148,7 @@ module ActiveRecord
       def extended_size=(val=0)
         @extended_size = val
       end
-      
+
       def extended_size
         @extended_size
       end
@@ -134,34 +161,6 @@ module ActiveRecord
         @case_sensitive
       end
 
-      def simplified_type(field_type)
-        case field_type
-        when /^bigint/i             then :integer
-        when /^date/i               then :date
-        when /^timestamp_timezone/  then :timestamp
-        when /^timestamp/i          then :datetime
-        when /^numeric/i            then :decimal  
-        when /^bit\(1\)$/i          then :boolean
-        when /^lvarbinary/i         then :binary
-        when /^varchar/i            then :string
-        when /^integer/i            then :integer
-        when /^lvarchar/i           then :text
-        when /^varbinary/i          then :binary
-        else                         :binary  #RECID and ROWID
-        end
-      end
-
-      def type_cast(value)
-        
-        case type
-        when :timestamp     then value=='NULL' ? value : "'"+value.to_s+"'"
-        when :datetime      then value=='NULL' ? value : "'"+value.to_s+"'"
-        when :date          then value=='NULL' ? value :  "'"+value.to_s+"'"
-        when :integer       then value.nil? ? 'NULL'  : value
-        else
-          super
-        end
-      end
     end
 
     module ProgressExtendFields
