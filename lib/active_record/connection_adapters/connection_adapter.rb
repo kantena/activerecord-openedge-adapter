@@ -190,7 +190,7 @@ module ActiveRecord
       alias_method :original_remove_index, :remove_index
 
       def table_exists?(table_name)
-        table = table_name.dup.delete("pub.")
+        table = table_name.dup.gsub("pub.","")
         tables.include?(table.to_s)
       end
 
