@@ -1,7 +1,5 @@
 require 'test/unit'
-['test_helper','../lib/jdbc_adapter/jdbc_openedge','models/person' ].each do |req_file|
-  require File.join(File.dirname(__FILE__),req_file )
-end
+require 'test_helper'
 
 class IdTest < Test::Unit::TestCase
   include JdbcSpec
@@ -21,6 +19,7 @@ class IdTest < Test::Unit::TestCase
   def test_retrieve_id_and_id_successives
     alphonse, pierre = create_person('Alphonse'), create_person('Pierre')
     assert !alphonse.id.nil? &&  !pierre.id.nil?
+    p alphonse.id.inspect
     assert_equal alphonse.id + 1, pierre.id
   end
 

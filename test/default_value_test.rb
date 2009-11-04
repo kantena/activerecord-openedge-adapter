@@ -1,7 +1,6 @@
 require 'test/unit'
-['test_helper','models/types'].each do |req_file|
-  require File.join(File.dirname(__FILE__),req_file )
-end
+require 'test_helper'
+
 class FindersTest < Test::Unit::TestCase
 
   def setup

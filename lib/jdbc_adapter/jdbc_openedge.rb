@@ -14,21 +14,15 @@ module ::JdbcSpec
   module OpenEdge
  
     DEFAULT_TABLE_PREFIX = 'pub'
-
-    def add_column_options!(sql, options)
-      super
-      if options.include?(:cs)
-        cs = options[:cs]? 'y' : 'n'
-        sql << " pro_case_sensitive '#{cs}'"
-      end
-    end
+  
 
     def quote(value, column = nil)
 
       return "NULL" if value.nil?
-
+      symbolize_type! column
+      
       unless column.nil?
-        if column.respond_to?(:extended) && column.extended?
+        if column.respond_to?(:extended?) && column.extended?
           val = value.dup
           val.shift
           return "'"+val.join(";")+"'"
@@ -38,7 +32,7 @@ module ::JdbcSpec
         when :date,:datetime,:timestamp,:time then to_openedge_date(column.type,value)
         when :boolean                         then value ? '1' : '0'
         when :string ,:text                   then "'"+double_quotes(value)+"'"
-        when :integer ,:float,:decimal        then "#{value}"
+        when :integer,:float,:decimal         then "#{value}"
         when :binary                          then "'#{value}'"
         end
       else
@@ -72,10 +66,10 @@ module ::JdbcSpec
           create_dummy_sequence
           return next_sequence_value
         rescue
-          raise "Progress adaptor need dummy_seq table with one row for sequences. Unable to create it"
+          raise "Progress adaptor need dummy_sequence table with one row for sequences. Unable to create it"
         end
       end
-      raise "Unable to get nextval from DummySEQ" if res.nil?
+      raise "Unable to get nextval from dummy_sequence" if res.nil?
       res['sequence_next'].to_i
     end
  
@@ -94,8 +88,8 @@ module ::JdbcSpec
     def retrieve_extended_columns(columns,table_name)
       extended_columns(table_name).map do |ext_col|
         columns.each  do|col|
-          if ext_col['col'] == col.name
-            col.extended(true)
+          if ext_col['col'].upcase == col.name.upcase
+            col.extended = true
             col.extended_size = ext_col['array_extent']
           end
         end
@@ -110,6 +104,11 @@ module ::JdbcSpec
     end
 
     private
+
+    def symbolize_type! column
+      return if  column.class == ActiveRecord::ConnectionAdapters::JdbcColumn
+      column.type = column.type.to_sym unless column.nil?
+    end
     
     def to_openedge_date(type,value)
       case type

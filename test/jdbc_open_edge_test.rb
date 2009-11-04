@@ -1,8 +1,6 @@
 require 'test/unit'
-require File.join(File.dirname(__FILE__), '../lib/jdbc_adapter/jdbc_openedge')
-['test_helper','models/person','models/types', '../lib/jdbc_adapter/jdbc_openedge'].each do |req_file|
-  require File.join(File.dirname(__FILE__),req_file )
-end
+require 'test_helper'
+
 class JdbcOpenEdgeTest <Test::Unit::TestCase
   include JdbcSpec
   include OpenEdge

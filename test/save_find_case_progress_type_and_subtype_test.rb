@@ -8,81 +8,71 @@ class SaveFindForDifferentProgressTypesTest < Test::Unit::TestCase
 
   def setup
     Types.delete_all
-    @t = create_empty_type_and_find_it
+    @t = create_type
   end
  
   def test_with_date
     @t.date = '2009-09-20'
     assert @t.save
-    @t = Types.find :first
-    assert_equal '2009-09-20', @t.date.to_s(:db)
+    assert_equal '2009-09-20', @t.reload.date.to_s(:db)
   end
 
   def test_with_decimal
-    test_with('decimal',0,3.6)
+    assert_equal 0, @t.decimal
+    @t.decimal = 3.6
+    assert @t.save
+    assert_equal 3.6, @t.reload.decimal
   end
 
   def test_with_logical
-    test_with('logical',false,true)
+    assert_equal false, @t.logical
+    @t.logical = true
+    assert @t.save
+    assert_equal true, @t.reload.logical
   end
 
   def test_with_date_time
     @t.datetime = '2009-09-20 20:30:20'
     assert @t.save
-    @t.reload
-    assert_equal '2009-09-20 20:30:20', @t.datetime.to_s(:db)
+    assert_equal '2009-09-20 20:30:20',  @t.reload.datetime.to_s(:db)
   end
   
   def test_with_date_time_tz
     date_tz = Time.now
     @t['datetime-tz'] = date_tz
     assert @t.save
-    @t.reload
-    assert_equal date_tz.to_s, @t['datetime-tz'].to_s
+    assert_equal date_tz.to_s, @t.reload['datetime-tz'].to_s
   end
 
   def test_with_float
-    test_with('float',0,3.677888)
+    assert_equal nil, @t.float
+    @t.float = 3.677888
+    assert @t.save
+    assert_equal 3.677888, @t.reload.float
   end
 
   def test_with_char
-    test_with('char','','A')
+    assert_equal nil, @t.char
+    @t.char = 'A'
+    assert @t.save
+    assert_equal 'A', @t.reload.char
   end
 
   def test_with_chars
-    test_with('chars','','foo')
+    assert_equal nil, @t.chars
+    @t.chars = 'foo'
+    assert @t.save
+    assert_equal 'foo', @t.reload.chars
   end
 
   def test_with_extended_chars
-    @t = create_empty_type_and_find_it
-    assert_equal [nil,'','',''],@t['extended-chars']
-    @t['extended-chars'][1] = 'ABCD'
-    @t['extended-chars'][2] = 'EFGH'
+    assert_equal [nil,'','',''],@t['extend_chars']
+    @t['extend_chars'][1] = 'ABCD'
+    @t['extend_chars'][2] = 'EFGH'
     assert @t.save
     @t = Types.find :first
-    assert_equal 'ABCD', @t['extended-chars'][1]
-    assert_equal 'EFGH', @t['extended-chars'][2]
+    assert_equal 'ABCD', @t['extend_chars'][1]
+    assert_equal 'EFGH', @t['extend_chars'][2]
   end
 
-  def test_with_extended_numeric
-
-  end
-
-  private
-  
-  def test_with(attr,initial_value,affected_value,expected_value=affected_value)
-    @t = create_empty_type_and_find_it
-    assert_equal initial_value,@t[attr]
-    @t[attr] = affected_value
-    assert @t.save
-    @t = Types.find :first
-    assert_equal expected_value, @t[attr]
-    
-  end
-
-  def create_empty_type_and_find_it
-    assert Types.new.save
-    Types.find :first
-  end
-  
 end

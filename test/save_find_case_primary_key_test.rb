@@ -1,8 +1,5 @@
 require 'test/unit'
-
-['test_helper','models/magasin','models/person','models/pet'].each do |req_file|
-  require File.join(File.dirname(__FILE__),req_file )
-end
+require 'test_helper'
 
 class SaveFindTest < Test::Unit::TestCase
   include ActiveRecord
@@ -10,20 +7,19 @@ class SaveFindTest < Test::Unit::TestCase
   # Tests dans le cas d'un clé primaire composée déclarée avec set_primary_keys
   
   def test_sequence_insert_find_delete_with_composite_key
-    mag = Magasin.find(:first,:conditions =>["codsoc = ? and codtab = ?",'ER','VER10'])
-    mag = create_magasin if mag.nil?
+    create_office
+    mag = Office.find(:first,:conditions =>["codsoc = ? and codtab = ?",'ER','VER10'])
     assert mag.delete
-    mag = Magasin.find(:first,:conditions =>["codsoc = ? and codtab = ?",'ER','VER10'])
+    mag = Office.find(:first,:conditions =>["codsoc = ? and codtab = ?",'ER','VER10'])
     assert mag.nil?
   end
 
   def test_update_with_composite_key
-    mag = create_magasin
-    mag.gencod ='123'
-    assert mag.save
+    mag = create_office
+    mag.name = "La Poste"
+    assert mag.save!
     # mag.reload : ne fonctionne pas -> bug composite_primary_keys ligne 63
-    mag = Magasin.find(:first,:conditions =>["codsoc = ? and codtab = ?",'ER','VER10'])
-    assert_equal '123', mag.gencod
+    mag = Office.find(:first,:conditions =>["codsoc = ? and codtab = ?",'ER','VER10'])
     assert mag.delete
   end
   
@@ -68,8 +64,6 @@ class SaveFindTest < Test::Unit::TestCase
     assert_equal 'Laurent', p.name
     assert p.delete
   end
-
- 
 
   
 end

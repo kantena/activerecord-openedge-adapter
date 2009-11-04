@@ -1,8 +1,5 @@
 require 'test/unit'
-
-['test_helper','../lib/jdbc_adapter/jdbc_openedge','models/person','models/pet'].each do |req_file|
-  require File.join(File.dirname(__FILE__),req_file )
-end
+require 'test_helper'
 
 class ExtendedFieldsTest < Test::Unit::TestCase
 
@@ -13,12 +10,12 @@ class ExtendedFieldsTest < Test::Unit::TestCase
   def test_get_extended_columns
     extended_cols = @connection.extended_columns("pub.people")
     assert_equal 1, extended_cols.size
-    assert_equal 'adress', extended_cols.first['col']
+    assert_equal 'ADDRESS', extended_cols.first['col']
   end
 
   def test_extended_column?
     Person.columns.each do |col|
-      if col.name == "adress" 
+      if col.name == "address"
         assert col.extended?
       else
         assert !col.extended?
@@ -45,9 +42,9 @@ class ExtendedFieldsTest < Test::Unit::TestCase
   end
 
   def test_attributes
-    p = Person.new
-    assert_equal 3, p.attributes.size
-    assert p.adress
+    p = Person.new(:name => "toto")
+    assert_equal 5, p.attributes.size
+    assert p.address
     assert p.name
   end
 

@@ -4,7 +4,7 @@ begin
     require jarfile
   end
 rescue LoadError
-  raise Exception.new("These Progress jar files are required in lib :['util.jar', 'base.jar', 'openedge.jar']")
+  puts "These Progress jar files are required in lib :['util.jar', 'base.jar', 'openedge.jar']"
 end
 
 

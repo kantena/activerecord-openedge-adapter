@@ -1,11 +1,10 @@
 module ActiveRecord
-  
   module ConnectionAdapters
 
     class TableDefinition
 
-      alias_method :original_column, :column
-
+      alias_method :original_column, :column unless ActiveRecord::ConnectionAdapters::TableDefinition.instance_methods.include?('original_column')
+    
       def column(name, type, options = {})
         method(:original_column).call(name,type,options)
         column = self[name]
@@ -17,8 +16,8 @@ module ActiveRecord
     class ColumnDefinition 
       attr_accessor :cs
 
-      alias_method :original_to_sql, :to_sql
-
+      alias_method :original_to_sql, :to_sql unless ActiveRecord::ConnectionAdapters::ColumnDefinition.instance_methods.include?('original_to_sql')
+ 
       def to_sql
         column_sql = method(:original_to_sql).call
         column_options = {}
@@ -29,13 +28,13 @@ module ActiveRecord
       end
       
       alias to_s :to_sql
+     
     end
 
     class JdbcAdapter < AbstractAdapter
 
       def _execute(sql,name = nil)
         if JdbcConnection::select?(sql)
-         
           @connection.execute_query(sql)
         else
           @connection.execute_update(sql)
@@ -53,7 +52,7 @@ module ActiveRecord
           :text        => { :name => "CLOB" },
           :integer     => { :name => "INTEGER" },
           :float       => { :name => "NUMBER" },
-          :decimal     => { :name => "NUMERIC" },
+          :decimal     => { :name => "DECIMAL(32,10)"},
           :datetime    => { :name => "TIMESTAMP" },
           :timestamp   => { :name => "TIMESTAMP WITH TIME ZONE" },
           :time        => { :name => "DATETIME" },
@@ -62,9 +61,7 @@ module ActiveRecord
           :boolean     =>{ :name => "BIT" } 
         }
       end
-      
-
-
+    
       def indexes(table_name, name = nil)
         indexes_from_sysprogress_sysindexes(table_name).map do |index|
           IndexDefinition.new(table_name,index[:name],index[:unique],index[:columns])
@@ -121,15 +118,12 @@ module ActiveRecord
       end
 
       def type_cast(value)
-       
         return nil if value == 'NULL'
         return 'NULL' if value.nil?
-       
         super
       end
 
-      #TODO remplacer par generation dyna getter setter
-      def extended(ext=false)
+      def extended=(ext)
         @extended = ext
       end
 
@@ -137,7 +131,7 @@ module ActiveRecord
         @extended
       end
 
-      def from_extended_column(val=false)
+      def from_extended_column= (val)
         @from_extended_column = val
       end
 
@@ -145,7 +139,7 @@ module ActiveRecord
         @from_extended_column
       end
 
-      def extended_size=(val=0)
+      def extended_size=(val)
         @extended_size = val
       end
 
@@ -153,7 +147,7 @@ module ActiveRecord
         @extended_size
       end
 
-      def case_sensitive=(val=false)
+      def case_sensitive=(val)
         @case_sensitive = val
       end
 
@@ -188,7 +182,16 @@ module ActiveRecord
 
       alias_method :original_add_column, :add_column
       alias_method :original_remove_index, :remove_index
+      alias_method :original_add_column_options!, :add_column_options! unless ActiveRecord::ConnectionAdapters::SchemaStatements.instance_methods.include?('original_add_column_options!')
 
+      def add_column_options!(sql, options)
+        method(:original_add_column_options!).call(sql,options)
+        if options.include?(:cs)
+          case_s = options[:cs]? 'y' : 'n'
+          sql << " pro_case_sensitive '#{case_s}'"
+        end
+      end
+      
       def table_exists?(table_name)
         table = table_name.dup.gsub("pub.","")
         tables.include?(table.to_s)

@@ -1,0 +1,6 @@
+:adapter : openedge
+:port : 22010
+:username: pca
+:password:
+:host: '127.0.0.1'
+:database: adaptertest
