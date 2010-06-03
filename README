@@ -1,0 +1,13 @@
+
+Activerecord-openedge-adapter
+============================
+
+Adapteur jdbc permettant d'utiliser Active Record (AR) avec des bases Progress OpenEdge.
+
+Install
+=======
+
+`script/plugin install git://github.com/kantena/activerecord-openedge-adapter.git`
+
+
+_plus d'info sur le [wiki](http://wiki.github.com/kantena/activerecord-openedge-adapter/)_
